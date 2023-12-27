@@ -36,6 +36,11 @@ describe("LBM", function () {
 
       await time.increase(time.duration.days(60));
       console.log("Core team vesting:", ethers.formatEther(await CoreTeam["releasable(address)"](LBM.target)));
+
+      await CoreTeam["release(address)"](LBM.target);
+      console.log("Core team vesting:", ethers.formatEther(await CoreTeam["releasable(address)"](LBM.target)));
+      console.log("Contract balance:", ethers.formatEther(await LBM.balanceOf(CoreTeam.target)));
+      console.log("User balance:", ethers.formatEther(await LBM.balanceOf(owner.address)));
     });
   });
 });
