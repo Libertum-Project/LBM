@@ -51,6 +51,7 @@ describe("LBM", function () {
       Marketing.target,
       Airdrop.target,
       Advisors.target,
+      projectDevelopmentWallet.address,
     ]);
     await LBM.waitForDeployment();
 
@@ -287,9 +288,7 @@ describe("LBM", function () {
       await time.increase(time.duration.days(30) * 7);
 
       // Expected release amount: 2,000,000 / 36 months ~= 55.6k tokens
-      const expectedReleaseAmount = ethers.getBigInt(
-        "55555555555555555555555"
-      );
+      const expectedReleaseAmount = ethers.getBigInt("55555555555555555555555");
       // Acceptable delta (approximately 5 minutes) ~= 6 tokens
       const delta = ethers.getBigInt("6430041152263374485");
       const actualReleaseAmount = await Advisors["releasable(address)"](
@@ -310,6 +309,15 @@ describe("LBM", function () {
       await time.increase(time.duration.days(30) * 1);
       await Advisors["release(address)"](LBM.target);
       expect(await LBM.balanceOf(Advisors.target)).to.equal(0);
+    });
+  });
+
+  describe("Project Development Wallet", function () {
+    it("Should mint 4M tokens to the presale exchange wallet", async function () {
+      const { LBM, projectDevelopmentWallet } = await loadFixture(deployAll);
+      expect(await LBM.balanceOf(projectDevelopmentWallet.address)).to.equal(
+        ethers.parseEther("4000000")
+      );
     });
   });
 });

@@ -14,8 +14,8 @@ contract LBM is ERC20 {
         address ambassadorProgram, // Vesting Wallet
         address marketing, // Vesting Wallet
         address airdrop, // Vesting Wallet
-        address advisors // Vesting Wallet
-        // address projectDevelopment, // Project Development Wallet
+        address advisors, // Vesting Wallet
+        address projectDevelopment // Project Development Wallet
         // address privateInvestment // Vesting Wallet
     ) ERC20("Libertum", "LBM") {
         _mint(treasuryReserve, 70_000_000 * 10 ** decimals());
@@ -28,7 +28,7 @@ contract LBM is ERC20 {
         _mint(marketing, 4_000_000 * 10 ** decimals());
         _mint(airdrop, 2_000_000 * 10 ** decimals());
         _mint(advisors, 2_000_000 * 10 ** decimals());
-        // _mint(projectDevelopment, 4_000_000 * 10 ** decimals());
+        _mint(projectDevelopment, 4_000_000 * 10 ** decimals());
         // _mint(privateInvestment, 20_000_000 * 10 ** decimals());
     }
 }
