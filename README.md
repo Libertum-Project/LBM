@@ -14,9 +14,11 @@ To run the unit tests for the primary LBM contract and accompanying vesting cont
 npx hardhat test
 ```
 
-## Version
+## Compiler and Inherited Contracts
 
-All contracts compiled and tested using Solidity [v0.8.23](https://github.com/ethereum/solidity/releases/tag/v0.8.23). Primary LBM contract inherits OpenZeppelin v5.0.1's [ERC-20](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol) token contract. All vesting contracts inherit OpenZeppelin v5.0.1's [VestingWallet](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/finance/VestingWallet.sol) contract.
+All contracts compiled and tested using Solidity [v0.8.23](https://github.com/ethereum/solidity/releases/tag/v0.8.23). The `optimizer` is currently set to 1,000 runs in anticipation of medium-high frequency of runtime execution (in exchange for higher deployment costs) over this contract's lifespan.
+
+Primary LBM contract inherits OpenZeppelin's (v5.0.1) [ERC-20](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol) token contract. All vesting contracts inherit OpenZeppelin's (v5.0.1) [VestingWallet](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/finance/VestingWallet.sol) contract.
 
 ## Tokenomics
 
