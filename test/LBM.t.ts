@@ -27,6 +27,10 @@ describe("LBM", function () {
     ]);
     await AmbassadorProgram.waitForDeployment();
 
+    // Deploy marketing vesting contract
+    const Marketing = await ethers.deployContract("Marketing", [admin.address]);
+    await Marketing.waitForDeployment();
+
     // Deploy primary token contract
     const LBM = await ethers.deployContract("LBM", [
       treasuryWallet.address,
@@ -36,6 +40,7 @@ describe("LBM", function () {
       liquidityWallet.address,
       stakingWallet.address,
       AmbassadorProgram.target,
+      Marketing.target,
     ]);
     await LBM.waitForDeployment();
 
@@ -49,6 +54,7 @@ describe("LBM", function () {
       projectDevelopmentWallet,
       CoreTeam,
       AmbassadorProgram,
+      Marketing,
       LBM,
     };
   }
@@ -163,7 +169,7 @@ describe("LBM", function () {
       // 1 months into vesting period
       await time.increase(time.duration.days(30) * 7);
 
-      // Expected release amount: 6,000,000 / 12 months ~= 250k tokens
+      // Expected release amount: 6,000,000 / 24 months ~= 250k tokens
       const expectedReleaseAmount = ethers.getBigInt(
         "250000000000000000000000"
       );
@@ -187,6 +193,45 @@ describe("LBM", function () {
       await time.increase(time.duration.days(30) * 1);
       await AmbassadorProgram["release(address)"](LBM.target);
       expect(await LBM.balanceOf(AmbassadorProgram.target)).to.equal(0);
+    });
+  });
+
+  describe("Marketing Vesting Contract", function () {
+    it("Should not allow vesting before the 6 month cliff", async function () {
+      const { Marketing, LBM } = await loadFixture(deployAll);
+      expect(await Marketing["releasable(address)"](LBM.target)).to.equal(0);
+    });
+
+    it("Should allow vesting after the 6 month cliff, linearly over 24 months", async function () {
+      const { admin, Marketing, LBM } = await loadFixture(deployAll);
+
+      // 1 months into vesting period
+      await time.increase(time.duration.days(30) * 7);
+
+      // Expected release amount: 6,000,000 / 24 months ~= 167k tokens
+      const expectedReleaseAmount = ethers.getBigInt(
+        "166666666666666666666666"
+      );
+      // Acceptable delta (approximately 5 minutes) ~= 19 tokens
+      const delta = ethers.getBigInt("19290123456790123455");
+      const actualReleaseAmount = await Marketing["releasable(address)"](
+        LBM.target
+      );
+
+      expect(actualReleaseAmount).to.be.closeTo(expectedReleaseAmount, delta);
+      await Marketing["release(address)"](LBM.target);
+      const adminBalance = await LBM.balanceOf(admin.address);
+      expect(adminBalance).to.be.closeTo(expectedReleaseAmount, delta);
+
+      // At 23 months
+      await time.increase(time.duration.days(30) * 22);
+      await Marketing["release(address)"](LBM.target);
+      expect(await LBM.balanceOf(Marketing.target)).to.not.equal(0);
+
+      // At 24 months
+      await time.increase(time.duration.days(30) * 1);
+      await Marketing["release(address)"](LBM.target);
+      expect(await LBM.balanceOf(Marketing.target)).to.equal(0);
     });
   });
 });
