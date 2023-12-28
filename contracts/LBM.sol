@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract LBM is ERC20 {
     constructor(
-        // address treasuryReserve, // Treasury Wallet
+        address treasuryReserve, // Treasury Wallet
         address coreTeam // Vesting Wallet
         // address presaleExchange, // Presale Exchange Wallet (sent to presale exchange contract after)
         // address cexListing, // CEX Listing Wallet
@@ -18,7 +18,7 @@ contract LBM is ERC20 {
         // address projectDevelopment, // Project Development Wallet
         // address privateInvestment // Vesting Wallet
     ) ERC20("Libertum", "LBM") {
-        // _mint(treasuryReserve, 70_000_000 * 10 ** decimals());
+        _mint(treasuryReserve, 70_000_000 * 10 ** decimals());
         _mint(coreTeam, 50_000_000 * 10 ** decimals());
         // _mint(presaleExchange, 12_000_000 * 10 ** decimals());
         // _mint(cexListing, 20_000_000 * 10 ** decimals());
