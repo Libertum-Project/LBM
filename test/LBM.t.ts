@@ -27,6 +27,7 @@ describe("LBM", function () {
       CoreTeam.target,
       presaleWallet.address,
       cexWallet.address,
+      liquidityWallet.address,
     ]);
     await LBM.waitForDeployment();
 
@@ -117,6 +118,15 @@ describe("LBM", function () {
       const { LBM, cexWallet } = await loadFixture(deployAll);
       expect(await LBM.balanceOf(cexWallet.address)).to.equal(
         ethers.parseEther("20000000")
+      );
+    });
+  });
+
+  describe("Liquidity Wallet", function () {
+    it("Should mint 2M tokens to the presale exchange wallet", async function () {
+      const { LBM, liquidityWallet } = await loadFixture(deployAll);
+      expect(await LBM.balanceOf(liquidityWallet.address)).to.equal(
+        ethers.parseEther("2000000")
       );
     });
   });
