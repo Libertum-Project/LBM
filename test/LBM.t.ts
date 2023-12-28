@@ -25,6 +25,7 @@ describe("LBM", function () {
     const LBM = await ethers.deployContract("LBM", [
       treasuryWallet.address,
       CoreTeam.target,
+      presaleWallet.address,
     ]);
     await LBM.waitForDeployment();
 
@@ -86,7 +87,6 @@ describe("LBM", function () {
 
       expect(actualReleaseAmount).to.be.closeTo(expectedReleaseAmount, delta);
       await CoreTeam["release(address)"](LBM.target);
-
       const adminBalance = await LBM.balanceOf(admin.address);
       expect(adminBalance).to.be.closeTo(expectedReleaseAmount, delta);
 
@@ -99,6 +99,15 @@ describe("LBM", function () {
       await time.increase(time.duration.days(30) * 1);
       await CoreTeam["release(address)"](LBM.target);
       expect(await LBM.balanceOf(CoreTeam.target)).to.equal(0);
+    });
+  });
+
+  describe("Presale Exchange Wallet", function () {
+    it("Should mint 12M tokens to the presale exchange wallet", async function () {
+      const { LBM, presaleWallet } = await loadFixture(deployAll);
+      expect(await LBM.balanceOf(presaleWallet.address)).to.equal(
+        ethers.parseEther("12000000")
+      );
     });
   });
 });
