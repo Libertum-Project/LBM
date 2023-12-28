@@ -21,6 +21,12 @@ describe("LBM", function () {
     const CoreTeam = await ethers.deployContract("CoreTeam", [admin.address]);
     await CoreTeam.waitForDeployment();
 
+    // Deploy ambassador program vesting contract
+    const AmbassadorProgram = await ethers.deployContract("AmbassadorProgram", [
+      admin.address,
+    ]);
+    await AmbassadorProgram.waitForDeployment();
+
     // Deploy primary token contract
     const LBM = await ethers.deployContract("LBM", [
       treasuryWallet.address,
@@ -29,6 +35,7 @@ describe("LBM", function () {
       cexWallet.address,
       liquidityWallet.address,
       stakingWallet.address,
+      AmbassadorProgram.target,
     ]);
     await LBM.waitForDeployment();
 
@@ -41,6 +48,7 @@ describe("LBM", function () {
       stakingWallet,
       projectDevelopmentWallet,
       CoreTeam,
+      AmbassadorProgram,
       LBM,
     };
   }
@@ -75,14 +83,14 @@ describe("LBM", function () {
     it("Should allow vesting after the 12 month cliff, linearly over 48 months", async function () {
       const { admin, CoreTeam, LBM } = await loadFixture(deployAll);
 
-      // 13 months into vesting period
+      // 1 month into vesting period
       await time.increase(time.duration.days(30) * 13);
 
-      // Expected release amount: 50,000,000 tokens / 48 months ~= 1,041 tokens
+      // Expected release amount: 50,000,000 tokens / 48 months ~= 1.04M tokens
       const expectedReleaseAmount = ethers.getBigInt(
         "1041666666666666666666666"
       );
-      // Acceptable delta (approximately 5 minutes) ~= 120 tokens
+      // Acceptable delta (approximately 5 minutes) ~= 121 tokens
       const delta = ethers.getBigInt("120563271604938271600");
       const actualReleaseAmount = await CoreTeam["releasable(address)"](
         LBM.target
@@ -138,6 +146,47 @@ describe("LBM", function () {
       expect(await LBM.balanceOf(stakingWallet.address)).to.equal(
         ethers.parseEther("8000000")
       );
+    });
+  });
+
+  describe("Ambassador Program Vesting Contract", function () {
+    it("Should not allow vesting before the 6 month cliff", async function () {
+      const { AmbassadorProgram, LBM } = await loadFixture(deployAll);
+      expect(
+        await AmbassadorProgram["releasable(address)"](LBM.target)
+      ).to.equal(0);
+    });
+
+    it("Should allow vesting after the 6 month cliff, linearly over 24 months", async function () {
+      const { admin, AmbassadorProgram, LBM } = await loadFixture(deployAll);
+
+      // 1 months into vesting period
+      await time.increase(time.duration.days(30) * 7);
+
+      // Expected release amount: 6,000,000 / 12 months ~= 250k tokens
+      const expectedReleaseAmount = ethers.getBigInt(
+        "250000000000000000000000"
+      );
+      // Acceptable delta (approximately 5 minutes) ~= 29 tokens
+      const delta = ethers.getBigInt("28935185185185185185");
+      const actualReleaseAmount = await AmbassadorProgram[
+        "releasable(address)"
+      ](LBM.target);
+
+      expect(actualReleaseAmount).to.be.closeTo(expectedReleaseAmount, delta);
+      await AmbassadorProgram["release(address)"](LBM.target);
+      const adminBalance = await LBM.balanceOf(admin.address);
+      expect(adminBalance).to.be.closeTo(expectedReleaseAmount, delta);
+
+      // At 23 months
+      await time.increase(time.duration.days(30) * 22);
+      await AmbassadorProgram["release(address)"](LBM.target);
+      expect(await LBM.balanceOf(AmbassadorProgram.target)).to.not.equal(0);
+
+      // At 24 months
+      await time.increase(time.duration.days(30) * 1);
+      await AmbassadorProgram["release(address)"](LBM.target);
+      expect(await LBM.balanceOf(AmbassadorProgram.target)).to.equal(0);
     });
   });
 });
