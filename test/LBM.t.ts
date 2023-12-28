@@ -31,6 +31,10 @@ describe("LBM", function () {
     const Marketing = await ethers.deployContract("Marketing", [admin.address]);
     await Marketing.waitForDeployment();
 
+    // Deploy airdrop vesting contract
+    const Airdrop = await ethers.deployContract("Airdrop", [admin.address]);
+    await Airdrop.waitForDeployment();
+
     // Deploy primary token contract
     const LBM = await ethers.deployContract("LBM", [
       treasuryWallet.address,
@@ -41,6 +45,7 @@ describe("LBM", function () {
       stakingWallet.address,
       AmbassadorProgram.target,
       Marketing.target,
+      Airdrop.target,
     ]);
     await LBM.waitForDeployment();
 
@@ -55,6 +60,7 @@ describe("LBM", function () {
       CoreTeam,
       AmbassadorProgram,
       Marketing,
+      Airdrop,
       LBM,
     };
   }
@@ -166,7 +172,7 @@ describe("LBM", function () {
     it("Should allow vesting after the 6 month cliff, linearly over 24 months", async function () {
       const { admin, AmbassadorProgram, LBM } = await loadFixture(deployAll);
 
-      // 1 months into vesting period
+      // 1 month into vesting period
       await time.increase(time.duration.days(30) * 7);
 
       // Expected release amount: 6,000,000 / 24 months ~= 250k tokens
@@ -205,7 +211,7 @@ describe("LBM", function () {
     it("Should allow vesting after the 6 month cliff, linearly over 24 months", async function () {
       const { admin, Marketing, LBM } = await loadFixture(deployAll);
 
-      // 1 months into vesting period
+      // 1 month into vesting period
       await time.increase(time.duration.days(30) * 7);
 
       // Expected release amount: 6,000,000 / 24 months ~= 167k tokens
@@ -232,6 +238,33 @@ describe("LBM", function () {
       await time.increase(time.duration.days(30) * 1);
       await Marketing["release(address)"](LBM.target);
       expect(await LBM.balanceOf(Marketing.target)).to.equal(0);
+    });
+  });
+
+  describe("Airdrop Contract", function () {
+    it("Should not allow vesting before the 1 month cliff", async function () {
+      const { Airdrop, LBM } = await loadFixture(deployAll);
+      expect(await Airdrop["releasable(address)"](LBM.target)).to.equal(0);
+    });
+
+    it("Should allow full vesting after the 1 month cliff", async function () {
+      const { admin, Airdrop, LBM } = await loadFixture(deployAll);
+
+      // 1 month into vesting period
+      await time.increase(time.duration.days(30) * 1);
+
+      // Expected release amount: 2M tokens
+      const expectedReleaseAmount = ethers.getBigInt(
+        "2000000000000000000000000"
+      );
+      const actualReleaseAmount = await Airdrop["releasable(address)"](
+        LBM.target
+      );
+
+      expect(actualReleaseAmount).to.be.equal(expectedReleaseAmount);
+      await Airdrop["release(address)"](LBM.target);
+      const adminBalance = await LBM.balanceOf(admin.address);
+      expect(adminBalance).to.be.equal(expectedReleaseAmount);
     });
   });
 });
