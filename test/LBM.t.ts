@@ -35,6 +35,10 @@ describe("LBM", function () {
     const Airdrop = await ethers.deployContract("Airdrop", [admin.address]);
     await Airdrop.waitForDeployment();
 
+    // Deploy advisors vesting contract
+    const Advisors = await ethers.deployContract("Advisors", [admin.address]);
+    await Advisors.waitForDeployment();
+
     // Deploy primary token contract
     const LBM = await ethers.deployContract("LBM", [
       treasuryWallet.address,
@@ -46,6 +50,7 @@ describe("LBM", function () {
       AmbassadorProgram.target,
       Marketing.target,
       Airdrop.target,
+      Advisors.target,
     ]);
     await LBM.waitForDeployment();
 
@@ -61,6 +66,7 @@ describe("LBM", function () {
       AmbassadorProgram,
       Marketing,
       Airdrop,
+      Advisors,
       LBM,
     };
   }
@@ -265,6 +271,45 @@ describe("LBM", function () {
       await Airdrop["release(address)"](LBM.target);
       const adminBalance = await LBM.balanceOf(admin.address);
       expect(adminBalance).to.be.equal(expectedReleaseAmount);
+    });
+  });
+
+  describe("Advisors Vesting Contract", function () {
+    it("Should not allow vesting before the 6 month cliff", async function () {
+      const { Advisors, LBM } = await loadFixture(deployAll);
+      expect(await Advisors["releasable(address)"](LBM.target)).to.equal(0);
+    });
+
+    it("Should allow vesting after the 6 month cliff, linearly over 24 months", async function () {
+      const { admin, Advisors, LBM } = await loadFixture(deployAll);
+
+      // 1 month into vesting period
+      await time.increase(time.duration.days(30) * 7);
+
+      // Expected release amount: 2,000,000 / 36 months ~= 55.6k tokens
+      const expectedReleaseAmount = ethers.getBigInt(
+        "55555555555555555555555"
+      );
+      // Acceptable delta (approximately 5 minutes) ~= 6 tokens
+      const delta = ethers.getBigInt("6430041152263374485");
+      const actualReleaseAmount = await Advisors["releasable(address)"](
+        LBM.target
+      );
+
+      expect(actualReleaseAmount).to.be.closeTo(expectedReleaseAmount, delta);
+      await Advisors["release(address)"](LBM.target);
+      const adminBalance = await LBM.balanceOf(admin.address);
+      expect(adminBalance).to.be.closeTo(expectedReleaseAmount, delta);
+
+      // At 35 months
+      await time.increase(time.duration.days(30) * 34);
+      await Advisors["release(address)"](LBM.target);
+      expect(await LBM.balanceOf(Advisors.target)).to.not.equal(0);
+
+      // At 36 months
+      await time.increase(time.duration.days(30) * 1);
+      await Advisors["release(address)"](LBM.target);
+      expect(await LBM.balanceOf(Advisors.target)).to.equal(0);
     });
   });
 });
