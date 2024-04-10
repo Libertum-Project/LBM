@@ -62,7 +62,7 @@ describe("LBM", function () {
       );
     });
 
-    it("Should not allow vesting befor the 12 month cliff", async function () {
+    it("Should not allow vesting before the 12 month cliff", async function () {
       const { CoreTeam, LBM } = await loadFixture(deployAll);
       expect(await CoreTeam["releasable(address)"](LBM.target)).to.equal(0);
 
