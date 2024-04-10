@@ -43,27 +43,27 @@ describe("LBM", function () {
 
   describe("Deployment", function () {
     it("Should deploy the LBM contract with the correct name and symbol", async function () {
-      const { LBM } = await deployAll();
+      const { LBM } = await loadFixture(deployAll);
       expect(await LBM.name()).to.equal("Libertum");
       expect(await LBM.symbol()).to.equal("LBM");
     });
 
     it("Should have a total supply of 200M tokens", async function () {
-      const { LBM } = await deployAll();
+      const { LBM } = await loadFixture(deployAll);
       expect(await LBM.totalSupply()).to.equal(ethers.parseEther("200000000"));
     });
   });
 
   describe("Core Team Vesting Contract", function () {
     it("Should mint 50M tokens to the Core Team Vesting Contract", async function () {
-      const { CoreTeam, LBM } = await deployAll();
+      const { CoreTeam, LBM } = await loadFixture(deployAll);
       expect(await LBM.balanceOf(CoreTeam.target)).to.equal(
         ethers.parseEther("50000000")
       );
     });
 
     it("Should not allow vesting befor the 12 month cliff", async function () {
-      const { CoreTeam, LBM } = await deployAll();
+      const { CoreTeam, LBM } = await loadFixture(deployAll);
       expect(await CoreTeam["releasable(address)"](LBM.target)).to.equal(0);
 
       // Advance time by 11 months to check that the 12 month cliff works
@@ -72,7 +72,7 @@ describe("LBM", function () {
     });
 
     it("Should allow linear vesting over 48 months after the 12 month cliff", async function () {
-      const { deployer, CoreTeam, LBM } = await deployAll();
+      const { deployer, CoreTeam, LBM } = await loadFixture(deployAll);
 
       // Advance time by 13 months (1 month into the 48 month vesting period)
       await time.increase(time.duration.days(30) * 13);
@@ -102,7 +102,7 @@ describe("LBM", function () {
     });
 
     it("Should fully vest after 60 months (48 months + 12 months cliff)", async function () {
-      const { deployer, CoreTeam, LBM } = await deployAll();
+      const { deployer, CoreTeam, LBM } = await loadFixture(deployAll);
 
       // Advance time by 60 months
       await time.increase(time.duration.days(30) * 60);
