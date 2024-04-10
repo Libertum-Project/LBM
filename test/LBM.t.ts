@@ -119,4 +119,49 @@ describe("LBM", function () {
       );
     });
   });
+
+  describe("Treasury Wallet", function () {
+    it("Should mint 50M tokens to the Treasury Wallet", async function () {
+      const { treasuryWallet, LBM } = await loadFixture(deployAll);
+      expect(await LBM.balanceOf(treasuryWallet.address)).to.equal(
+        ethers.parseEther("50000000")
+      );
+    });
+  });
+
+  describe("Staking Wallet", function () {
+    it("Should mint 8M tokens to the Staking Wallet", async function () {
+      const { stakingWallet, LBM } = await loadFixture(deployAll);
+      expect(await LBM.balanceOf(stakingWallet.address)).to.equal(
+        ethers.parseEther("8000000")
+      );
+    });
+  });
+
+  describe("Marketing Wallet", function () {
+    it("Should mint 6M tokens to the Marketing Wallet", async function () {
+      const { marketingWallet, LBM } = await loadFixture(deployAll);
+      expect(await LBM.balanceOf(marketingWallet.address)).to.equal(
+        ethers.parseEther("6000000")
+      );
+    });
+  });
+
+  describe("Ecosystem Wallet", function () {
+    it("Should mint 28M tokens to the Ecosystem Wallet", async function () {
+      const { ecosystemWallet, LBM } = await loadFixture(deployAll);
+      expect(await LBM.balanceOf(ecosystemWallet.address)).to.equal(
+        ethers.parseEther("28000000")
+      );
+    });
+  });
+
+  describe("Token Sale Wallet", function () {
+    it("Should mint 58M tokens to the Token Sale Wallet", async function () {
+      const { tokenSaleWallet, LBM } = await loadFixture(deployAll);
+      expect(await LBM.balanceOf(tokenSaleWallet.address)).to.equal(
+        ethers.parseEther("58000000")
+      );
+    });
+  });
 });
